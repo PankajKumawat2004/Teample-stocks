@@ -347,13 +347,9 @@
                                             <p class="text-uppercase fw-medium text-muted text-truncate mb-3">total
                                                 category</p>
                                             <div class="d-flex align-items-center mb-3">
-                                                <h4 class="fs-4 flex-grow-1 mb-0"><span class="counter-value"
-                                                        data-target="825">825</span></h4>
-                                                <span class="badge bg-danger-subtle text-danger fs-12"><i
-                                                        class="ri-arrow-down-s-line fs-13 align-middle me-1"></i>5.02
-                                                    %</span>
+                                                <h4 class="fs-4 flex-grow-1 mb-0"><span id="totalCategoryCount">0</span></h4>
                                             </div>
-                                            <p class="text-muted text-truncate mb-0">Categories this month</p>
+                                            <p class="text-muted text-truncate mb-0">Active categories</p>
                                         </div>
                                     </div>
                                 </div><!-- end card body -->
@@ -382,13 +378,9 @@
                                         <div class="flex-grow-1 ms-3">
                                             <p class="text-uppercase fw-medium text-muted mb-3">Total items</p>
                                             <div class="d-flex align-items-center mb-3">
-                                                <h4 class="fs-4 flex-grow-1 mb-0"><span class="counter-value"
-                                                        data-target="7522">7,522</span></h4>
-                                                <span class="badge bg-success-subtle text-success fs-12"><i
-                                                        class="ri-arrow-up-s-line fs-13 align-middle me-1"></i>3.58
-                                                    %</span>
+                                                <h4 class="fs-4 flex-grow-1 mb-0"><span id="totalItemsCount">0</span></h4>
                                             </div>
-                                            <p class="text-muted mb-0">Items this month</p>
+                                            <p class="text-muted mb-0">Total items in stock</p>
                                         </div>
                                     </div>
                                 </div><!-- end card body -->
@@ -415,14 +407,9 @@
                                             <p class="text-uppercase fw-medium text-muted text-truncate mb-3">Total
                                                 inventory</p>
                                             <div class="d-flex align-items-center mb-3">
-                                                <h4 class="fs-4 flex-grow-1 mb-0"><span class="counter-value"
-                                                        data-target="168">168</span>h <span class="counter-value"
-                                                        data-target="40">40</span>m</h4>
-                                                <span class="badge bg-danger-subtle text-danger fs-12"><i
-                                                        class="ri-arrow-down-s-line fs-13 align-middle me-1"></i>10.35
-                                                    %</span>
+                                                <h4 class="fs-4 flex-grow-1 mb-0"><span id="totalInventoryCount">0</span></h4>
                                             </div>
-                                            <p class="text-muted text-truncate mb-0">Stock this month</p>
+                                            <p class="text-muted text-truncate mb-0">Total inventory quantity</p>
                                         </div>
                                     </div>
                                 </div><!-- end card body -->
@@ -460,86 +447,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>1</td>
-                                                <td>Plate</td>
-                                                <td>Steel Plate</td>
-                                                <td>0</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>2</td>
-                                                <td>Plate</td>
-                                                <td>Glass Plate Dinner</td>
-                                                <td>40</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>3</td>
-                                                <td>Plate</td>
-                                                <td>Glas Plate Quarter</td>
-                                                <td>30</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>4</td>
-                                                <td>Glass</td>
-                                                <td>Steel Glass Mohit</td>
-                                                <td>50</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>5</td>
-                                                <td>Cups</td>
-                                                <td>Tea Cups</td>
-                                                <td>60</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>6</td>
-                                                <td>Bowls</td>
-                                                <td>Serving Bowls</td>
-                                                <td>40</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>7</td>
-                                                <td>Pans</td>
-                                                <td>Frying Pans</td>
-                                                <td>15</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>8</td>
-                                                <td>Pots</td>
-                                                <td>Cooking Pots</td>
-                                                <td>20</td>
-                                                <td>
-                                                    <a href="view.html" class="text-primary"><i
-                                                            data-feather="eye"></i></a>
-                                                </td>
-                                            </tr>
+                                            <!-- Items will be loaded from Supabase -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -1492,6 +1400,144 @@
 
     <!-- App js -->
     <script src="assets/js/app.js"></script>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Config -->
+    <script src="assets/js/supabase-config.js"></script>
+
+    <!-- Custom script for loading items from Supabase -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const tableBody = document.querySelector('table tbody');
+            const deleteBtn = document.getElementById('deleteBtn');
+            let selectedRows = new Set();
+
+            // Function to load dashboard stats
+            async function loadDashboardStats() {
+                try {
+                    const stats = await SupabaseDB.getDashboardStats();
+                    
+                    // Update Total Category card
+                    const categoryElement = document.getElementById('totalCategoryCount');
+                    if (categoryElement) {
+                        categoryElement.textContent = stats.totalCategories;
+                    }
+                    
+                    // Update Total Items card
+                    const itemsElement = document.getElementById('totalItemsCount');
+                    if (itemsElement) {
+                        itemsElement.textContent = stats.totalItems;
+                    }
+                    
+                    // Update Total Inventory card
+                    const inventoryElement = document.getElementById('totalInventoryCount');
+                    if (inventoryElement) {
+                        inventoryElement.textContent = stats.totalStock;
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard stats:', error);
+                }
+            }
+
+            // Load dashboard stats
+            await loadDashboardStats();
+
+            // Function to load items from Supabase
+            async function loadItems() {
+                try {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+                    const items = await SupabaseDB.getItems();
+                    
+                    tableBody.innerHTML = '';
+                    
+                    if (items.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No items found. <a href="dashboard-analytics.html">Add your first item!</a></td></tr>';
+                        return;
+                    }
+                    
+                    items.forEach((item, index) => {
+                        const categoryName = item.categories ? item.categories.name : 'Unknown';
+                        const newRow = document.createElement('tr');
+                        newRow.setAttribute('data-id', item.id);
+                        newRow.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${categoryName}</td>
+                            <td>${item.name}</td>
+                            <td>${item.current_stock || 0}</td>
+                            <td>
+                                <a href="view.html?item=${encodeURIComponent(item.name)}&itemId=${item.id}" class="text-primary"><i data-feather="eye"></i></a>
+                            </td>
+                        `;
+                        tableBody.appendChild(newRow);
+                    });
+                    
+                    // Re-initialize feather icons
+                    if (typeof feather !== 'undefined') {
+                        feather.replace();
+                    }
+                } catch (error) {
+                    console.error('Error loading items:', error);
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading items. Please refresh.</td></tr>';
+                }
+            }
+
+            // Load items when page loads
+            await loadItems();
+
+            // Handle checkbox selection for deletion
+            tableBody.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox') {
+                    const row = e.target.closest('tr');
+                    const itemId = row.getAttribute('data-id');
+                    if (e.target.checked) {
+                        selectedRows.add(itemId);
+                        row.classList.add('table-active');
+                    } else {
+                        selectedRows.delete(itemId);
+                        row.classList.remove('table-active');
+                    }
+                }
+            });
+
+            // Handle delete button
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async function() {
+                    if (selectedRows.size === 0) {
+                        alert('Please select at least one item to delete');
+                        return;
+                    }
+
+                    if (!confirm(`Are you sure you want to delete ${selectedRows.size} item(s)?`)) {
+                        return;
+                    }
+
+                    try {
+                        deleteBtn.disabled = true;
+                        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
+                        
+                        // Delete each selected item
+                        for (const itemId of selectedRows) {
+                            await SupabaseDB.deleteItem(itemId);
+                        }
+                        
+                        selectedRows.clear();
+                        
+                        // Reload items
+                        await loadItems();
+                        
+                        alert('Items deleted successfully!');
+                    } catch (error) {
+                        console.error('Error deleting items:', error);
+                        alert('Error deleting items. Please try again.');
+                    } finally {
+                        deleteBtn.disabled = false;
+                        deleteBtn.innerHTML = 'Delete';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 

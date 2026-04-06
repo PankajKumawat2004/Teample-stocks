@@ -517,86 +517,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-                                                    <td>1</td>
-                                                    <td>Plate</td>
-                                                    <td>Steel Plate</td>
-                                                    <td>0</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>2</td>
-                                                    <td>Plate</td>
-                                                    <td>Glass Plate Dinner</td>
-                                                    <td>40</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>3</td>
-                                                    <td>Plate</td>
-                                                    <td>Glas Plate Quarter</td>
-                                                    <td>30</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>4</td>
-                                                    <td>Glass</td>
-                                                    <td>Steel Glass Mohit</td>
-                                                    <td>50</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>5</td>
-                                                    <td>Cups</td>
-                                                    <td>Tea Cups</td>
-                                                    <td>60</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>6</td>
-                                                    <td>Bowls</td>
-                                                    <td>Serving Bowls</td>
-                                                    <td>40</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>7</td>
-                                                    <td>Pans</td>
-                                                    <td>Frying Pans</td>
-                                                    <td>15</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>8</td>
-                                                    <td>Pots</td>
-                                                    <td>Cooking Pots</td>
-                                                    <td>20</td>
-                                                    <td>
-                                                        <a href="view.html" class="text-primary"><i
-                                                                data-feather="eye"></i></a>
-                                                    </td>
-                                                </tr>
+                                                <!-- Items will be loaded from Supabase -->
                                             </tbody>
                                         </table>
                                     </div>
@@ -1550,6 +1471,197 @@
 
     <!-- App js -->
     <script src="assets/js/app.js"></script>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Config -->
+    <script src="assets/js/supabase-config.js"></script>
+
+    <!-- Custom script for adding items to table -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const submitBtn = document.getElementById('submitItemBtn');
+            const addItemForm = document.getElementById('addItemForm');
+            const tableBody = document.querySelector('table tbody');
+            const modalElement = document.getElementById('addItemModal');
+            const categorySelect = document.getElementById('itemCategory');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            let categoriesMap = {}; // Store category id to name mapping
+            let selectedRows = new Set();
+
+            // Function to load categories from Supabase
+            async function loadCategories() {
+                try {
+                    const categories = await SupabaseDB.getCategories();
+                    
+                    // Clear existing options except the first one (Select)
+                    categorySelect.innerHTML = '<option value="" selected>Select</option>';
+                    
+                    // Build category map and populate dropdown
+                    categories.forEach(function(category) {
+                        categoriesMap[category.id] = category.name;
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                }
+            }
+
+            // Function to load items from Supabase
+            async function loadItems() {
+                try {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+                    const items = await SupabaseDB.getItems();
+                    
+                    tableBody.innerHTML = '';
+                    
+                    if (items.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No items found. Add your first item!</td></tr>';
+                        return;
+                    }
+                    
+                    items.forEach((item, index) => {
+                        const categoryName = item.categories ? item.categories.name : 'Unknown';
+                        const newRow = document.createElement('tr');
+                        newRow.setAttribute('data-id', item.id);
+                        newRow.innerHTML = `
+                            <td>
+                                <input type="checkbox" class="form-check-input item-checkbox">
+                            </td>
+                            <td>${index + 1}</td>
+                            <td>${categoryName}</td>
+                            <td>${item.name}</td>
+                            <td>${item.current_stock || 0}</td>
+                            <td>
+                                <a href="view.html?item=${encodeURIComponent(item.name)}&itemId=${item.id}" class="text-primary view-item-link"><i data-feather="eye"></i></a>
+                            </td>
+                        `;
+                        tableBody.appendChild(newRow);
+                    });
+                    
+                    // Re-initialize feather icons
+                    if (typeof feather !== 'undefined') {
+                        feather.replace();
+                    }
+                } catch (error) {
+                    console.error('Error loading items:', error);
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading items. Please refresh.</td></tr>';
+                }
+            }
+
+            // Load categories and items when page loads
+            await loadCategories();
+            await loadItems();
+
+            if (submitBtn && addItemForm && tableBody) {
+                submitBtn.addEventListener('click', async function() {
+                    // Get form values
+                    const categoryId = document.getElementById('itemCategory').value;
+                    const itemName = document.getElementById('newItemName').value.trim();
+                    const qty = document.getElementById('newItemQty').value;
+
+                    // Validate form
+                    if (!categoryId || !itemName || !qty) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+
+                    try {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
+                        
+                        // Save item to Supabase
+                        await SupabaseDB.addItem(itemName, categoryId, parseInt(qty));
+                        
+                        // Clear form
+                        addItemForm.reset();
+
+                        // Close modal
+                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+
+                        // Reload items table
+                        await loadItems();
+                        
+                        alert('Item added successfully!');
+                    } catch (error) {
+                        console.error('Error adding item:', error);
+                        if (error.message && error.message.includes('duplicate')) {
+                            alert('This item already exists!');
+                        } else {
+                            alert('Error adding item. Please try again.');
+                        }
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Submit';
+                    }
+                });
+
+                // Clear form when modal is closed
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    addItemForm.reset();
+                });
+            }
+
+            // Handle checkbox selection
+            tableBody.addEventListener('change', function(e) {
+                if (e.target.classList.contains('item-checkbox')) {
+                    const row = e.target.closest('tr');
+                    const itemId = row.getAttribute('data-id');
+                    if (e.target.checked) {
+                        selectedRows.add(itemId);
+                        row.classList.add('table-active');
+                    } else {
+                        selectedRows.delete(itemId);
+                        row.classList.remove('table-active');
+                    }
+                }
+            });
+
+            // Handle delete button
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async function() {
+                    if (selectedRows.size === 0) {
+                        alert('Please select at least one item to delete');
+                        return;
+                    }
+
+                    if (!confirm(`Are you sure you want to delete ${selectedRows.size} item(s)?`)) {
+                        return;
+                    }
+
+                    try {
+                        deleteBtn.disabled = true;
+                        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
+                        
+                        // Delete each selected item
+                        for (const itemId of selectedRows) {
+                            await SupabaseDB.deleteItem(itemId);
+                        }
+                        
+                        selectedRows.clear();
+                        
+                        // Reload items
+                        await loadItems();
+                        
+                        alert('Items deleted successfully!');
+                    } catch (error) {
+                        console.error('Error deleting items:', error);
+                        alert('Error deleting items. Please try again.');
+                    } finally {
+                        deleteBtn.disabled = false;
+                        deleteBtn.innerHTML = 'Delete';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 

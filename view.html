@@ -311,11 +311,33 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                            <h4 class="mb-sm-0">Stock Management</h4>
+                            <h4 class="mb-sm-0" id="pageTitle">Stock Management</h4>
+                            <a href="dashboard-analytics.html" class="btn btn-sm btn-outline-secondary">
+                                <i class="ri-arrow-left-line"></i> Back to Dashboard
+                            </a>
                         </div>
                     </div>
                 </div>
                 <!-- end page title -->
+
+                <!-- Item Details -->
+                <div class="row mb-3" id="itemDetailsSection" style="display: none;">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <h5 class="mb-1">Item: <span id="currentItemName" class="text-primary"></span></h5>
+                                        <p class="text-muted mb-0">Category: <span id="currentItemCategory"></span></p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="badge bg-info fs-6">Current Stock: <span id="currentStock">0</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Stock Buttons -->
                 <div class="row mb-3">
@@ -348,42 +370,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>1</td>
-                                                <td>Plate</td>
-                                                <td>Steel Plate</td>
-                                                <td>50</td>
-                                                <td></td>
-                                                <td>add item</td>
-                                                <td>50</td>
-                                            </tr>
-                                            <tr>
-                                                <td>2</td>
-                                                <td>Plate</td>
-                                                <td>Steel Plate</td>
-                                                <td></td>
-                                                <td>20</td>
-                                                <td>misplaced</td>
-                                                <td>30</td>
-                                            </tr>
-                                            <tr>
-                                                <td>3</td>
-                                                <td>Plate</td>
-                                                <td>Steel Plate</td>
-                                                <td>10</td>
-                                                <td></td>
-                                                <td>new stock in</td>
-                                                <td>40</td>
-                                            </tr>
-                                            <tr>
-                                                <td>3</td>
-                                                <td>Plate</td>
-                                                <td>Steel Plate</td>
-                                                <td></td>
-                                                <td>40</td>
-                                                <td>lost</td>
-                                                <td>0</td>
-                                            </tr>
+                                            <!-- Transactions will be loaded from Supabase -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -405,10 +392,7 @@
                                     <div class="mb-3">
                                         <label for="stockInItemName" class="form-label">Item Name</label>
                                         <select class="form-select" id="stockInItemName" name="stockInItemName" required>
-                                            <option value="Steel Plate" selected>Steel Plate </option>
-                                            <option value="Glass Plate">Glass Plate</option>
-                                            <option value="Ceramic Plate">Ceramic Plate</option>
-                                            <option value="Steel Glass">Steel Glass</option>
+                                            <!-- Items will be loaded from Supabase -->
                                         </select>
                                     </div>
 
@@ -444,11 +428,8 @@
                                     <div class="mb-3">
                                         <label for="stockOutItemName" class="form-label">Item Name</label>
                                         <select class="form-select" id="stockOutItemName" name="stockOutItemName" required>
-                                            <option value="Steel Plate" selected>Steel Plate </option>
-                                            <option value="Glass Plate">Glass Plate</option>
-                                            <option value="Ceramic Plate">Ceramic Plate</option>
-                                            <option value="Steel Glass">Steel Glass</option>
-                                        </select>.
+                                            <!-- Items will be loaded from Supabase -->
+                                        </select>
                                     </div>
 
                                     <div class="mb-3">
@@ -1333,6 +1314,225 @@
 
     <!-- App js -->
     <script src="assets/js/app.js"></script>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Config -->
+    <script src="assets/js/supabase-config.js"></script>
+
+    <!-- Custom script for Stock In and Stock Out functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const submitStockInBtn = document.getElementById('submitStockInBtn');
+            const submitStockOutBtn = document.getElementById('submitStockOutBtn');
+            const stockInForm = document.getElementById('stockInForm');
+            const stockOutForm = document.getElementById('stockOutForm');
+            const tableBody = document.querySelector('table tbody');
+            const stockInModal = document.getElementById('stockInModal');
+            const stockOutModal = document.getElementById('stockOutModal');
+            const bsStockInModal = new bootstrap.Modal(stockInModal);
+            const bsStockOutModal = new bootstrap.Modal(stockOutModal);
+            const stockInItemSelect = document.getElementById('stockInItemName');
+            const stockOutItemSelect = document.getElementById('stockOutItemName');
+
+            let itemsMap = {}; // Store item id to name/category mapping
+
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterItemId = urlParams.get('itemId');
+            const filterItemName = urlParams.get('item');
+
+            // Update page title if filtering by item
+            if (filterItemName) {
+                const pageTitle = document.querySelector('.page-title-box h4');
+                if (pageTitle) {
+                    pageTitle.textContent = `Stock Transactions - ${decodeURIComponent(filterItemName)}`;
+                }
+            }
+
+            // Function to load items from Supabase
+            async function loadItemsIntoDropdown() {
+                try {
+                    const items = await SupabaseDB.getItems();
+                    
+                    // Clear both selects
+                    stockInItemSelect.innerHTML = '';
+                    stockOutItemSelect.innerHTML = '';
+                    
+                    if (items.length === 0) {
+                        const option = document.createElement('option');
+                        option.textContent = 'No items available';
+                        option.disabled = true;
+                        stockInItemSelect.appendChild(option.cloneNode(true));
+                        stockOutItemSelect.appendChild(option);
+                        return;
+                    }
+                    
+                    // Add items to both dropdowns
+                    items.forEach(function(item, index) {
+                        itemsMap[item.id] = {
+                            name: item.name,
+                            category: item.categories ? item.categories.name : 'Unknown'
+                        };
+                        
+                        const optionIn = document.createElement('option');
+                        optionIn.value = item.id;
+                        optionIn.textContent = item.name;
+                        // Pre-select if filtering by item
+                        if (filterItemId && item.id === filterItemId) {
+                            optionIn.selected = true;
+                        } else if (index === 0 && !filterItemId) {
+                            optionIn.selected = true;
+                        }
+                        stockInItemSelect.appendChild(optionIn);
+                        
+                        const optionOut = document.createElement('option');
+                        optionOut.value = item.id;
+                        optionOut.textContent = item.name;
+                        if (filterItemId && item.id === filterItemId) {
+                            optionOut.selected = true;
+                        } else if (index === 0 && !filterItemId) {
+                            optionOut.selected = true;
+                        }
+                        stockOutItemSelect.appendChild(optionOut);
+                    });
+                } catch (error) {
+                    console.error('Error loading items:', error);
+                }
+            }
+
+            // Function to load transactions from Supabase
+            async function loadTransactions() {
+                try {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
+                    
+                    const transactions = await SupabaseDB.getTransactions(filterItemId);
+                    
+                    tableBody.innerHTML = '';
+                    
+                    if (transactions.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions found.</td></tr>';
+                        return;
+                    }
+                    
+                    transactions.forEach((transaction, index) => {
+                        const itemName = transaction.items ? transaction.items.name : 'Unknown';
+                        const categoryName = transaction.items && transaction.items.categories ? transaction.items.categories.name : 'Unknown';
+                        const stockIn = transaction.type === 'stock_in' ? transaction.quantity : '';
+                        const stockOut = transaction.type === 'stock_out' ? transaction.quantity : '';
+                        
+                        const newRow = document.createElement('tr');
+                        newRow.setAttribute('data-id', transaction.id);
+                        newRow.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${categoryName}</td>
+                            <td>${itemName}</td>
+                            <td>${stockIn}</td>
+                            <td>${stockOut}</td>
+                            <td>${transaction.remark || ''}</td>
+                            <td>${transaction.running_total}</td>
+                        `;
+                        tableBody.appendChild(newRow);
+                    });
+                } catch (error) {
+                    console.error('Error loading transactions:', error);
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading transactions. Please refresh.</td></tr>';
+                }
+            }
+
+            // Load items and transactions when page loads
+            await loadItemsIntoDropdown();
+            await loadTransactions();
+
+            // Stock In functionality
+            submitStockInBtn.addEventListener('click', async function() {
+                const itemId = document.getElementById('stockInItemName').value;
+                const qty = document.getElementById('stockInQty').value;
+                const remark = document.getElementById('stockInRemark').value;
+
+                // Validate form
+                if (!itemId || !qty) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                try {
+                    submitStockInBtn.disabled = true;
+                    submitStockInBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
+                    
+                    await SupabaseDB.addStockIn(itemId, parseInt(qty), remark);
+
+                    // Clear form
+                    stockInForm.reset();
+
+                    // Close modal
+                    bsStockInModal.hide();
+
+                    // Reload transactions
+                    await loadTransactions();
+
+                    console.log('Stock In added successfully!');
+                } catch (error) {
+                    console.error('Error adding stock in:', error);
+                    alert('Error adding stock in. Please try again.');
+                } finally {
+                    submitStockInBtn.disabled = false;
+                    submitStockInBtn.innerHTML = 'Submit';
+                }
+            });
+
+            // Stock Out functionality
+            submitStockOutBtn.addEventListener('click', async function() {
+                const itemId = document.getElementById('stockOutItemName').value;
+                const qty = document.getElementById('stockOutQty').value;
+                const remark = document.getElementById('stockOutRemark').value;
+
+                // Validate form
+                if (!itemId || !qty) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                try {
+                    submitStockOutBtn.disabled = true;
+                    submitStockOutBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Removing...';
+                    
+                    const result = await SupabaseDB.addStockOut(itemId, parseInt(qty), remark);
+                    
+                    // Check if stock went negative
+                    if (result.running_total < 0) {
+                        alert('Warning: Stock is now negative!');
+                    }
+
+                    // Clear form
+                    stockOutForm.reset();
+
+                    // Close modal
+                    bsStockOutModal.hide();
+
+                    // Reload transactions
+                    await loadTransactions();
+
+                    console.log('Stock Out added successfully!');
+                } catch (error) {
+                    console.error('Error adding stock out:', error);
+                    alert('Error adding stock out. Please try again.');
+                } finally {
+                    submitStockOutBtn.disabled = false;
+                    submitStockOutBtn.innerHTML = 'Submit';
+                }
+            });
+
+            // Clear forms when modals are closed
+            stockInModal.addEventListener('hidden.bs.modal', function() {
+                stockInForm.reset();
+            });
+
+            stockOutModal.addEventListener('hidden.bs.modal', function() {
+                stockOutForm.reset();
+            });
+        });
+    </script>
 </body>
 
 

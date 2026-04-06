@@ -348,28 +348,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="categoryTableBody">
-                                            <tr>
-                                                <td>1</td>
-                                                <td class="category-name">Plate</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-sm btn-warning me-3 edit-category-btn" data-bs-toggle="modal" data-bs-target="#editCategoryModal">Edit</button>
-                                                    <div class="form-check form-switch d-inline-block">
-                                                        <input class="form-check-input" type="checkbox" role="switch" id="togglePlate" checked>
-                                                        <label class="form-check-label" for="togglePlate"></label>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>2</td>
-                                                <td class="category-name">Glass</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-sm btn-warning me-3 edit-category-btn" data-bs-toggle="modal" data-bs-target="#editCategoryModal">Edit</button>
-                                                    <div class="form-check form-switch d-inline-block">
-                                                        <input class="form-check-input" type="checkbox" role="switch" id="toggleGlass" checked>
-                                                        <label class="form-check-label" for="toggleGlass"></label>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            <!-- Categories will be loaded from Supabase -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -1290,16 +1269,61 @@
     <!-- App js -->
     <script src="assets/js/app.js"></script>
 
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Config -->
+    <script src="assets/js/supabase-config.js"></script>
+
     <!-- Add Category Script -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const saveCategoryBtn = document.getElementById('saveCategoryBtn');
             const categoryNameInput = document.getElementById('categoryName');
             const categoryTableBody = document.getElementById('categoryTableBody');
             const addCategoryModal = document.getElementById('addCategoryModal');
             const modalInstance = bootstrap.Modal.getInstance(addCategoryModal) || new bootstrap.Modal(addCategoryModal);
 
-            saveCategoryBtn.addEventListener('click', function() {
+            // Load categories from Supabase on page load
+            async function loadCategories() {
+                try {
+                    categoryTableBody.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+                    const categories = await SupabaseDB.getAllCategories();
+                    
+                    categoryTableBody.innerHTML = '';
+                    
+                    if (categories.length === 0) {
+                        categoryTableBody.innerHTML = '<tr><td colspan="3" class="text-center">No categories found. Add your first category!</td></tr>';
+                        return;
+                    }
+                    
+                    categories.forEach((category, index) => {
+                        const toggleId = 'toggle' + category.id;
+                        const newRow = document.createElement('tr');
+                        newRow.setAttribute('data-id', category.id);
+                        newRow.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td class="category-name">${category.name}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-warning me-3 edit-category-btn" data-bs-toggle="modal" data-bs-target="#editCategoryModal">Edit</button>
+                                <div class="form-check form-switch d-inline-block">
+                                    <input class="form-check-input category-toggle" type="checkbox" role="switch" id="${toggleId}" ${category.is_active ? 'checked' : ''}>
+                                    <label class="form-check-label" for="${toggleId}"></label>
+                                </div>
+                            </td>
+                        `;
+                        categoryTableBody.appendChild(newRow);
+                    });
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                    categoryTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error loading categories. Please refresh.</td></tr>';
+                }
+            }
+
+            // Initial load
+            await loadCategories();
+
+            // Save new category
+            saveCategoryBtn.addEventListener('click', async function() {
                 const categoryName = categoryNameInput.value.trim();
 
                 if (categoryName === '') {
@@ -1307,38 +1331,32 @@
                     return;
                 }
 
-                // Get current row count for S.No.
-                const currentRows = categoryTableBody.querySelectorAll('tr');
-                const newRowNumber = currentRows.length + 1;
-
-                // Create unique ID for toggle switch
-                const toggleId = 'toggle' + categoryName.replace(/\s+/g, '') + newRowNumber;
-
-                // Create new table row
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td>${newRowNumber}</td>
-                    <td class="category-name">${categoryName}</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-warning me-3 edit-category-btn" data-bs-toggle="modal" data-bs-target="#editCategoryModal">Edit</button>
-                        <div class="form-check form-switch d-inline-block">
-                            <input class="form-check-input" type="checkbox" role="switch" id="${toggleId}" checked>
-                            <label class="form-check-label" for="${toggleId}"></label>
-                        </div>
-                    </td>
-                `;
-
-                // Add the new row to the table
-                categoryTableBody.appendChild(newRow);
-
-                // Clear the input field
-                categoryNameInput.value = '';
-
-                // Hide the modal
-                modalInstance.hide();
-
-                // Optional: Show success message
-                // alert('Category added successfully!');
+                try {
+                    saveCategoryBtn.disabled = true;
+                    saveCategoryBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+                    
+                    await SupabaseDB.addCategory(categoryName);
+                    
+                    // Clear input and close modal
+                    categoryNameInput.value = '';
+                    modalInstance.hide();
+                    
+                    // Reload table
+                    await loadCategories();
+                    
+                    // Show success
+                    alert('Category added successfully!');
+                } catch (error) {
+                    console.error('Error adding category:', error);
+                    if (error.message && error.message.includes('duplicate')) {
+                        alert('This category already exists!');
+                    } else {
+                        alert('Error adding category. Please try again.');
+                    }
+                } finally {
+                    saveCategoryBtn.disabled = false;
+                    saveCategoryBtn.innerHTML = 'Save Category';
+                }
             });
 
             // Clear input when modal is closed
@@ -1352,11 +1370,13 @@
             const editCategoryModal = document.getElementById('editCategoryModal');
             const editModalInstance = bootstrap.Modal.getInstance(editCategoryModal) || new bootstrap.Modal(editCategoryModal);
             let currentEditingRow = null;
+            let currentEditingId = null;
 
             // Handle Edit button clicks
             categoryTableBody.addEventListener('click', function(e) {
                 if (e.target.classList.contains('edit-category-btn')) {
                     currentEditingRow = e.target.closest('tr');
+                    currentEditingId = currentEditingRow.getAttribute('data-id');
                     const categoryNameCell = currentEditingRow.querySelector('.category-name') || currentEditingRow.querySelectorAll('td')[1];
                     const currentCategoryName = categoryNameCell.textContent;
                     editCategoryNameInput.value = currentCategoryName;
@@ -1364,7 +1384,7 @@
             });
 
             // Handle Update Category button click
-            updateCategoryBtn.addEventListener('click', function() {
+            updateCategoryBtn.addEventListener('click', async function() {
                 const newCategoryName = editCategoryNameInput.value.trim();
 
                 if (newCategoryName === '') {
@@ -1372,23 +1392,55 @@
                     return;
                 }
 
-                if (currentEditingRow) {
-                    // Update the category name in the table
-                    const categoryNameCell = currentEditingRow.querySelector('.category-name') || currentEditingRow.querySelectorAll('td')[1];
-                    categoryNameCell.textContent = newCategoryName;
+                if (currentEditingRow && currentEditingId) {
+                    try {
+                        updateCategoryBtn.disabled = true;
+                        updateCategoryBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
+                        
+                        await SupabaseDB.updateCategory(currentEditingId, newCategoryName);
+                        
+                        // Update the table row
+                        const categoryNameCell = currentEditingRow.querySelector('.category-name') || currentEditingRow.querySelectorAll('td')[1];
+                        categoryNameCell.textContent = newCategoryName;
 
-                    // Close the modal
-                    const modalInstance = bootstrap.Modal.getInstance(editCategoryModal);
-                    if (modalInstance) {
-                        modalInstance.hide();
+                        // Close the modal
+                        const modalInstance = bootstrap.Modal.getInstance(editCategoryModal);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+
+                        // Clear state
+                        editCategoryNameInput.value = '';
+                        currentEditingRow = null;
+                        currentEditingId = null;
+                        
+                        alert('Category updated successfully!');
+                    } catch (error) {
+                        console.error('Error updating category:', error);
+                        alert('Error updating category. Please try again.');
+                    } finally {
+                        updateCategoryBtn.disabled = false;
+                        updateCategoryBtn.innerHTML = 'Update Category';
                     }
+                }
+            });
 
-                    // Clear the input and reset current row
-                    editCategoryNameInput.value = '';
-                    currentEditingRow = null;
-
-                    // Optional: Show success message
-                    // alert('Category updated successfully!');
+            // Handle toggle switch for category status
+            categoryTableBody.addEventListener('change', async function(e) {
+                if (e.target.classList.contains('category-toggle')) {
+                    const row = e.target.closest('tr');
+                    const categoryId = row.getAttribute('data-id');
+                    const isActive = e.target.checked;
+                    
+                    try {
+                        await SupabaseDB.toggleCategoryStatus(categoryId, isActive);
+                        console.log(`Category ${isActive ? 'activated' : 'deactivated'} successfully`);
+                    } catch (error) {
+                        console.error('Error toggling category status:', error);
+                        // Revert the toggle
+                        e.target.checked = !isActive;
+                        alert('Error updating category status. Please try again.');
+                    }
                 }
             });
 
@@ -1396,6 +1448,7 @@
             editCategoryModal.addEventListener('hidden.bs.modal', function() {
                 editCategoryNameInput.value = '';
                 currentEditingRow = null;
+                currentEditingId = null;
             });
         });
     </script>
