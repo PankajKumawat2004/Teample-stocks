@@ -29,6 +29,19 @@
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
 
+    <style>
+        /* Sticky table header */
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: #212529;
+        }
+    </style>
 
 </head>
 
@@ -325,36 +338,40 @@
 
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-xl-4">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm flex-shrink-0">
-                                            <span class="avatar-title bg-primary-subtle text-primary rounded-2 fs-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="feather feather-grid text-primary">
-                                                    <rect x="3" y="3" width="7" height="7"></rect>
-                                                    <rect x="14" y="3" width="7" height="7"></rect>
-                                                    <rect x="14" y="14" width="7" height="7"></rect>
-                                                    <rect x="3" y="14" width="7" height="7"></rect>
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <div class="flex-grow-1 overflow-hidden ms-3">
-                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">total
-                                                category</p>
-                                            <div class="d-flex align-items-center mb-3">
-                                                <h4 class="fs-4 flex-grow-1 mb-0"><span id="totalCategoryCount">0</span></h4>
-                                            </div>
-                                            <p class="text-muted text-truncate mb-0">Active categories</p>
-                                        </div>
+                </div>
+                <!-- end page title -->
+
+                <!-- Dashboard Cards -->
+                <div class="row">
+                    <div class="col-xl-4">
+                        <div class="card card-animate">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm flex-shrink-0">
+                                        <span class="avatar-title bg-primary-subtle text-primary rounded-2 fs-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                class="feather feather-grid text-primary">
+                                                <rect x="3" y="3" width="7" height="7"></rect>
+                                                <rect x="14" y="3" width="7" height="7"></rect>
+                                                <rect x="14" y="14" width="7" height="7"></rect>
+                                                <rect x="3" y="14" width="7" height="7"></rect>
+                                            </svg>
+                                        </span>
                                     </div>
-                                </div><!-- end card body -->
-                            </div>
-                        </div><!-- end col -->
+                                    <div class="flex-grow-1 overflow-hidden ms-3">
+                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-3">total
+                                            category</p>
+                                        <div class="d-flex align-items-center mb-3">
+                                            <h4 class="fs-4 flex-grow-1 mb-0"><span id="totalCategoryCount">0</span></h4>
+                                        </div>
+                                        <p class="text-muted text-truncate mb-0">Active categories</p>
+                                    </div>
+                                </div>
+                            </div><!-- end card body -->
+                        </div>
+                    </div><!-- end col -->
 
                         <div class="col-xl-4">
                             <div class="card card-animate">
@@ -414,10 +431,10 @@
                                     </div>
                                 </div><!-- end card body -->
                             </div>
-                        </div><!-- end col -->
-                    </div>
+                    </div><!-- end col -->
                 </div>
-                <!-- end page title -->
+                <!-- end dashboard cards -->
+
                 <div class="d-flex mb-2">
                     <button type="button" class="btn btn-warning" onclick="window.location.href='add-category.html'">
                         <i class="ri-add-line align-middle me-1"></i> category
@@ -439,11 +456,11 @@
                                     <table class="table table-striped table-nowrap align-middle mb-0">
                                         <thead class="table-dark">
                                             <tr>
-                                                <th scope="col">S.No.</th>
+                                                <th scope="col" class="text-center">S.No.</th>
                                                 <th scope="col">Category</th>
                                                 <th scope="col">Item Name</th>
-                                                <th scope="col">Qty</th>
-                                                <th scope="col">Action</th>
+                                                <th scope="col" class="text-center">Qty</th>
+                                                <th scope="col" class="text-center">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1401,14 +1418,21 @@
     <!-- App js -->
     <script src="assets/js/app.js"></script>
 
-    <!-- Supabase CDN -->
+    <!-- Supabase CDN - must load before config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Supabase Config -->
     <script src="assets/js/supabase-config.js"></script>
 
     <!-- Custom script for loading items from Supabase -->
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
+        // Wait for both DOM and Supabase to be ready
+        async function initializeDashboard() {
+            // Check if SupabaseDB is available, if not wait a bit
+            if (typeof SupabaseDB === 'undefined') {
+                console.log('Waiting for SupabaseDB...');
+                setTimeout(initializeDashboard, 100);
+                return;
+            }
             const tableBody = document.querySelector('table tbody');
             const deleteBtn = document.getElementById('deleteBtn');
             let selectedRows = new Set();
@@ -1461,11 +1485,11 @@
                         const newRow = document.createElement('tr');
                         newRow.setAttribute('data-id', item.id);
                         newRow.innerHTML = `
-                            <td>${index + 1}</td>
+                            <td class="text-center">${index + 1}</td>
                             <td>${categoryName}</td>
                             <td>${item.name}</td>
-                            <td>${item.current_stock || 0}</td>
-                            <td>
+                            <td class="text-center">${item.current_stock || 0}</td>
+                            <td class="text-center">
                                 <a href="view.html?item=${encodeURIComponent(item.name)}&itemId=${item.id}" class="text-primary"><i data-feather="eye"></i></a>
                             </td>
                         `;
@@ -1536,7 +1560,14 @@
                     }
                 });
             }
-        });
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeDashboard);
+        } else {
+            initializeDashboard();
+        }
     </script>
 </body>
 

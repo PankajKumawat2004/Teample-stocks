@@ -107,12 +107,18 @@ async function getItems() {
             .from('items')
             .select(`
                 *,
-                categories (name)
+                categories (name, is_active)
             `)
             .order('created_at', { ascending: true });
         
         if (error) throw error;
-        return data || [];
+        
+        // Filter out items from inactive categories
+        const activeItems = (data || []).filter(item => 
+            item.categories && item.categories.is_active === true
+        );
+        
+        return activeItems;
     } catch (error) {
         console.error('Error fetching items:', error);
         return [];
@@ -312,23 +318,33 @@ async function addStockOut(itemId, quantity, remark = '') {
 // ==================== DASHBOARD STATS ====================
 async function getDashboardStats() {
     try {
-        // Get total categories
+        // Get total active categories
         const { count: totalCategories } = await supabaseClient
             .from('categories')
             .select('*', { count: 'exact', head: true })
             .eq('is_active', true);
         
-        // Get total items
-        const { count: totalItems } = await supabaseClient
-            .from('items')
-            .select('*', { count: 'exact', head: true });
+        // Get active category IDs
+        const { data: activeCategories } = await supabaseClient
+            .from('categories')
+            .select('id')
+            .eq('is_active', true);
         
-        // Get total stock value
-        const { data: items } = await supabaseClient
-            .from('items')
-            .select('current_stock');
+        const activeCategoryIds = activeCategories ? activeCategories.map(c => c.id) : [];
         
-        const totalStock = items ? items.reduce((sum, item) => sum + (item.current_stock || 0), 0) : 0;
+        // Get total items from active categories only
+        let totalItems = 0;
+        let totalStock = 0;
+        
+        if (activeCategoryIds.length > 0) {
+            const { data: items } = await supabaseClient
+                .from('items')
+                .select('current_stock, category_id')
+                .in('category_id', activeCategoryIds);
+            
+            totalItems = items ? items.length : 0;
+            totalStock = items ? items.reduce((sum, item) => sum + (item.current_stock || 0), 0) : 0;
+        }
         
         // Get today's transactions
         const today = new Date().toISOString().split('T')[0];
